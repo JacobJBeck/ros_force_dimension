@@ -54,16 +54,37 @@ namespace force_dimension {
    *  
    */
   const char WRENCH_COMMAND_TOPIC[] = "command/wrench";
-  
+
+  /** Topic for subscribing to robot gripper commands.
+   *
+   */
+  const char GRIPPER_COMMAND_TOPIC[] = "command/gripper";
+
+  /** Topic for subscribing to sigma7 force commands.
+   *
+   */
+  const char SIGMA7_FORCE_COMMAND_TOPIC[] = "command/sigma7_force";
+
   /** Topic for gripper gap width feedback.
    *  
    */
-  const char GRIPPER_GAP_FEEDBACK_TOPIC[] = "feedback/gripper_gap";
+  const char GRIPPER_GAP_FEEDBACK_TOPIC[] = "feedback/gripper/gap";
 
   /** Topic for gripper angle feedback.
    *  
    */
-  const char GRIPPER_ANGLE_FEEDBACK_TOPIC[] = "feedback/gripper_angle";
+  const char GRIPPER_ANGLE_FEEDBACK_TOPIC[] = "feedback/gripper/angle";
+
+  /** Topic for gripper thumb feedback position.
+   *
+   */
+  const char GRIPPER_THUMB_FEEDBACK_TOPIC[] = "feedback/gripper/thumb_position";
+
+  /** Topic for gripper index finger feedback position.
+   *
+   */
+  const char GRIPPER_INDEX_FEEDBACK_TOPIC[] = "feedback/gripper/index_position";
+
 
 } // namespace force_dimension
 

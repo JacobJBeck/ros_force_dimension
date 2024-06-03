@@ -95,19 +95,27 @@ namespace force_dimension {
     
     //// Publishes robot force messages.
     //void PublishForce(void);
-    
+
+    // Publish thumb and index positions
+    void PublishGripperThumbPosition(void);
+    void PublishGripperIndexPosition(void);
+
     // Subscribes to ROS messages that indicate an instantaneous force/torque
     // to be applied to the robot endpoint.
     void SubscribeWrench(void);
     
     // Subscribes to ROS messages that indicate an instantaneous force to be 
-    // applied to the gripper by the robot.
-    void SubscribeGripperForce(void);
+    // applied to the robot endpoint and the gripper by the robot.
+    void SubscribeSigma7Force(void);
+    // TO-DO: Include Delta3 force subscription.
+    void SubscribeDelta3Force(void);
     
     // Applies a wrench to the robotic manipulandum, as requested via ROS 
     // message.
     void wrench_callback(const WrenchMessage);
-    //void ApplyForce
+
+    // Applies a force message to the sigma7 robot with forces, torques and gripper forces.
+    void sigma7_force_callback(const Sigma7Message);
     
     // Check whether or not the current data sample should be published.
     bool IsPublishableSample(std::string);
@@ -124,7 +132,22 @@ namespace force_dimension {
     // Enable and disable forces.
     void set_enable_force(bool);
     void set_enable_force();
-    
+    // Enable expert mode to allow wrist joint torques control.
+    void set_enable_expert_mode(bool);
+
+    // Gripper control
+    void set_enable_gripper(bool);
+    double get_gripper_gap(void);
+    double get_gripper_angle(void);
+    double get_gripper_angular_velocity(void);
+    double get_max_gripper_force(void);
+    void set_max_gripper_force(double);
+    //void get_gripper_thumb_position();
+    void get_gripper_thumb_position(double&, double&, double&);
+    void get_gripper_index_position(double&, double&, double&);
+    double get_gripper_linear_velocity(void);
+
+
     // Parameters set callback.
     rcl_interfaces::msg::SetParametersResult 
       set_parameters_callback(const std::vector<rclcpp::Parameter> &);
@@ -133,6 +156,8 @@ namespace force_dimension {
     int device_id_;
     float publication_interval_s_;
     bool active_;
+    bool use_gripper_;
+    bool use_rotation_;
     bool configured_;
     int sample_number_;
     bool hardware_disabled_;
@@ -144,7 +169,10 @@ namespace force_dimension {
     rclcpp::Publisher<GripperAngleMessage>::SharedPtr gripper_angle_publisher_;
     rclcpp::Publisher<TwistMessage>::SharedPtr twist_publisher_;
     //rclcpp::Publisher<ForceMessage>::SharedPtr force_publisher_;
+    rclcpp::Publisher<GripperThumbPositionMessage>::SharedPtr gripper_thumb_publisher_;
+    rclcpp::Publisher<GripperIndexPositionMessage>::SharedPtr gripper_index_publisher_;
     rclcpp::Subscription<WrenchMessage>::SharedPtr wrench_subscription_;
+    rclcpp::Subscription<Sigma7Message>::SharedPtr sigma7_force_subscription_;
     OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
   };
 

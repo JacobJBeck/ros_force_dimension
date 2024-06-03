@@ -46,6 +46,8 @@ void force_dimension::Node::PublishState() {
   PublishGripperGap();
   PublishGripperAngle();
   PublishTwist();
+  PublishGripperThumbPosition();
+  PublishGripperIndexPosition();
   //publish_velocity();
   //publish_force();
   //publish_button();
@@ -92,7 +94,6 @@ void force_dimension::Node::PublishPose() {
   if(IsPublishableSample("pose")) pose_publisher_->publish(message);
 }
 
-
 /** Check whether or not the current data sample should be published.
  *  
  */
@@ -108,7 +109,6 @@ bool force_dimension::Node::IsPublishableSample(std::string parameter_name) {
                : false;
   return publish;
 }
-
 
 /** Publish button events.
  *  
@@ -126,62 +126,65 @@ void force_dimension::Node::PublishButton() {
   if(IsPublishableSample("button")) button_publisher_->publish(message);
 }
 
+/** Publish gripper Thumb position in meters.
+ *
+ */
+void force_dimension::Node::PublishGripperThumbPosition() {
+  // Prepare a gripper thumb message.
+  auto msg = GripperThumbPositionMessage();
+
+  // Get gripper thumb position
+  get_gripper_thumb_position(msg.x, msg.y, msg.z);
+
+  // Publish.
+  if(IsPublishableSample("gripper.thumb_position"))
+    gripper_thumb_publisher_->publish(msg);
+}
+
+/** Publish gripper Finger position in meters.
+ *
+ */
+void force_dimension::Node::PublishGripperIndexPosition() {
+  // Prepare a gripper thumb message.
+  auto msg = GripperIndexPositionMessage();
+
+  // Get gripper thumb position
+  get_gripper_index_position(msg.x, msg.y, msg.z);
+
+  // Publish.
+  if(IsPublishableSample("gripper.thumb_position"))
+    gripper_index_publisher_->publish(msg);
+}
 
 /** Publish gripper opening distance in meters.
  *  
  */
 void force_dimension::Node::PublishGripperGap() {
-  
-  // Read the gripper gap.
-  double gap = -1;
-  bool has_gripper = hardware_disabled_ ? false : dhdHasGripper(device_id_);
-  int result = has_gripper ? dhdGetGripperGap(&gap, device_id_) : 0;
-  if((result != 0) & (result != DHD_TIMEGUARD))  {
-      std::string message = "Failed to read gripper gap: ";
-      message += hardware_disabled_ ? "unknown error" : dhdErrorGetLastStr();
-      Log(message);
-      on_error();
-  }
-  
   // Prepare a gripper gap message.
   // ROS2 messages have "no constructor with positional arguments for the 
   // members".
   auto message = GripperGapMessage();
-  message.data = gap;
+  message.data = get_gripper_gap();
   
   // Publish.
-  if(IsPublishableSample("gripper_gap"))
+  if(IsPublishableSample("gripper.gap"))
     gripper_gap_publisher_->publish(message);
 }
-
 
 /** Publish gripper opening angle in radians.
  *  
  */
 void force_dimension::Node::PublishGripperAngle() {
-  
-  // Read the gripper angle.
-  double angle = -1;
-  bool has_gripper = hardware_disabled_ ? false : dhdHasGripper(device_id_);
-  int result = has_gripper ? dhdGetGripperAngleRad(&angle, device_id_) : 0;
-  if(result != 0)  {
-      std::string message = "Failed to read gripper angle: ";
-      message += hardware_disabled_ ? "unknown error" : dhdErrorGetLastStr();
-      Log(message);
-      on_error();
-  }
-  
   // Prepare a gripper angle message.
   // ROS2 messages have "no constructor with positional arguments for the 
   // members".
   auto message = GripperAngleMessage();
-  message.data = angle;
+  message.data = get_gripper_angle();
   
   // Publish.
-  if(IsPublishableSample("gripper_angle"))
+  if(IsPublishableSample("gripper.angle"))
     gripper_angle_publisher_->publish(message);
 }
-
 
 /** Publish the twist of the robotic end-effector.
  *  
@@ -225,7 +228,6 @@ void force_dimension::Node::PublishTwist() {
   // Publish.
   if(IsPublishableSample("twist")) twist_publisher_->publish(message);
 }
-
 
 #endif  //FORCE_DIMENSION_PUBLISH_H_
 

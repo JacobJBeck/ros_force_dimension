@@ -21,6 +21,12 @@
 #include "geometry_msgs/msg/wrench.hpp"
 #include "example_interfaces/msg/int32.hpp"
 #include "example_interfaces/msg/float64.hpp"
+#include "geometry_msgs/msg/point.hpp"
+
+
+// Include custom force dimension interface message types, and import the
+#include "haptic_device_interfaces/msg/sigma7.hpp"
+#include "haptic_device_interfaces/msg/delta3.hpp"
 
 
 // Declare namespace.
@@ -43,6 +49,16 @@ namespace force_dimension {
    */
   typedef geometry_msgs::msg::Wrench WrenchMessage;
 
+  /** New Sigma7 state ROS message type definition from my custom message.
+   *
+   */
+   typedef haptic_device_interfaces::msg::Sigma7 Sigma7Message;
+
+  /** Delta.3 ROS message type definition.
+   *
+   */
+   typedef haptic_device_interfaces::msg::Delta3 Delta3Message;
+
   /** Event ROS message type definition.
    *  
    */
@@ -57,6 +73,17 @@ namespace force_dimension {
    *  
    */
   typedef example_interfaces::msg::Float64 GripperAngleMessage;
+
+  /** Gripper thumb position ROS message type definition.
+   *
+   */
+  typedef geometry_msgs::msg::Point GripperThumbPositionMessage;
+
+  /** Gripper index position ROS message type definition.
+   *
+   */
+  typedef geometry_msgs::msg::Point GripperIndexPositionMessage;
+
 
 } // namespace force_dimension
 

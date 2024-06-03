@@ -41,10 +41,7 @@ void force_dimension::Node::set_enable_force(bool enable) {
       auto message = enable ? "Forces: Enabled" : "Forces: Disabled";
       Log(message);
   }
-  
 }
-
-
 
 /** Enable or disable forces using the parameter value.
  */
@@ -56,7 +53,27 @@ void force_dimension::Node::set_enable_force() {
       on_error();
   }
   else set_enable_force(enable);
-  
+}
+
+/** Enable or disable expert mode.
+ */
+void force_dimension::Node::set_enable_expert_mode(bool enable) {
+
+  int result = enable ? dhdEnableExpertMode() : dhdDisableExpertMode();
+  if(result != 0) {
+      std::string message = "Failed to ";
+      message += enable ? "enable" : "disable";
+      message += " expert mode: ";
+      message += hardware_disabled_ ? "unknown error" : dhdErrorGetLastStr();
+      Log(message);
+      on_error();
+  }
+  else
+  {
+      // Report the action.
+      auto message = enable ? "Expert mode: Enabled" : "Expert mode: Disabled";
+      Log(message);
+  }
 }
   
 #endif // FORCE_DIMENSION_FORCES_H_

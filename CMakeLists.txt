@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(force_dimension)
+project(ros_force_dimension)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -13,6 +13,15 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(example_interfaces REQUIRED)
+
+# *****************************************************************************
+# Add the Python module dependencies
+# *****************************************************************************
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
+#find_package(rosidl_default_generators REQUIRED)
+find_package(haptic_device_interfaces REQUIRED)
+
 
 # *****************************************************************************
 # Find the Force Dimension SDK dependency.
@@ -36,12 +45,12 @@ endif()
 # Add the Force Dimension node dependency.
 # *****************************************************************************
 
-add_executable(node src/entry_point.cpp src/node.cpp 
+add_executable(node src/entry_point.cpp src/node.cpp
                     src/log.cpp src/publish.cpp src/subscribe.cpp
                     src/parameters.cpp src/gravity_compensation.cpp
-                    src/forces.cpp)
-ament_target_dependencies(node rclcpp tf2_geometry_msgs 
-                          example_interfaces ForceDimensionSDK)
+                    src/forces.cpp src/gripper.cpp)
+ament_target_dependencies(node rclcpp tf2_geometry_msgs std_msgs example_interfaces
+                           ForceDimensionSDK haptic_device_interfaces)
 
 # *****************************************************************************
 # Install.
@@ -49,7 +58,8 @@ ament_target_dependencies(node rclcpp tf2_geometry_msgs
 
 install(TARGETS
   node
-  DESTINATION lib/${PROJECT_NAME})
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # *****************************************************************************
 # Install launch files.
@@ -60,11 +70,6 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
-# *****************************************************************************
-# Add the Python module dependencies
-# *****************************************************************************
-find_package(ament_cmake_python REQUIRED)
-find_package(rclpy REQUIRED)
 
 # *****************************************************************************
 # Install the Python package.

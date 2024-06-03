@@ -83,22 +83,36 @@ void Node::on_configure(void) {
   //// Create the force state publisher.
   //topic = FORCE_FEEDBACK_TOPIC;
   //force_publisher = create_publisher<force_message>(topic, qos);
-  
+
+  // Create the gripper thumb position publisher.
+  topic = GRIPPER_THUMB_FEEDBACK_TOPIC;
+  gripper_thumb_publisher_ = create_publisher<GripperThumbPositionMessage>(topic, qos);
+
+  // Create the gripper index position publisher.
+  topic = GRIPPER_INDEX_FEEDBACK_TOPIC;
+  gripper_index_publisher_ = create_publisher<GripperIndexPositionMessage>(topic, qos);
+
+
+
   // Initialize ROS2 parameters.
-  declare_parameter<float>("sample_interval_s", 0.025);
+  declare_parameter<float>("sample_interval_s", 0.0005);
   declare_parameter<bool>("disable_hardware", false);
   declare_parameter<bool>("gripper.emulate_button", false);
   declare_parameter<int>("feedback_sample_decimation.pose", 50);
   declare_parameter<int>("feedback_sample_decimation.twist", 50);
   declare_parameter<int>("feedback_sample_decimation.button", 50);
-  declare_parameter<int>("feedback_sample_decimation.gripper_gap", 50);
-  declare_parameter<int>("feedback_sample_decimation.gripper_angle", 50);
+  declare_parameter<int>("feedback_sample_decimation.gripper.gap", 50);
+  declare_parameter<int>("feedback_sample_decimation.gripper.angle", 50);
+  declare_parameter<int>("feedback_sample_decimation.gripper.thumb_position", 50);
+  declare_parameter<int>("feedback_sample_decimation.gripper.index_position", 51);
   declare_parameter<float>("effector_mass_kg", 0.190000);
   declare_parameter<bool>("gravity_compensation", true);
   declare_parameter<bool>("enable_force", true);
+  declare_parameter<bool>("enable_gripper", true); //Only used for the Sigma7
 
-  // Create the force control subcription.
+  // Create the force and gripper control subcriptions.
   SubscribeWrench();
+  SubscribeSigma7Force();
 }
 
 
@@ -126,21 +140,27 @@ void Node::on_activate(void) {
       message += hardware_disabled_ ? "hardware disabled" : dhdGetSystemName();
       Log(message);
   }
-  
-  // Enable button emulation, if requested.
-  unsigned char val = get_parameter("gripper.emulate_button").as_bool()
+
+  // Store haptic device properties
+  use_gripper_ = dhdHasGripper();
+  use_rotation_ = dhdHasWrist();
+
+  // Enable button emulation, if requested. Only if gripper is present.
+  if (use_gripper_) {
+    unsigned char val = get_parameter("gripper.emulate_button").as_bool()
                     ? DHD_ON : DHD_OFF;
-  int result = hardware_disabled_ ? 0 : dhdEmulateButton(val, device_id_);
-  if(result != 0) {
-      std::string message = "Button emulation failure: ";
-      //message += dhdErrorGetLastStr();
-      message += hardware_disabled_ ? "unknown error" : dhdErrorGetLastStr();
-      Log(message);
-      on_error();
+    int result = hardware_disabled_ ? 0 : dhdEmulateButton(val, device_id_);
+    if(result != 0) {
+        std::string message = "Button emulation failure: ";
+        //message += dhdErrorGetLastStr();
+        message += hardware_disabled_ ? "unknown error" : dhdErrorGetLastStr();
+        Log(message);
+        on_error();
+    }
   }
   
   // Apply zero force.
-  result = hardware_disabled_ 
+  int result = hardware_disabled_
          ? DHD_NO_ERROR 
          : dhdSetForceAndTorqueAndGripperForce(0.0, 0.0, 0.0, 
                                                0.0, 0.0, 0.0, 0.0);
@@ -208,7 +228,15 @@ void Node::on_activate(void) {
   // Enable gravity compensation.
   // Defaults to the ROS parameter value.
   set_gravity_compensation();
-  
+
+  // Enable expert mode.
+  set_enable_expert_mode(true);
+
+  // Set up gripper
+  if (use_gripper_) {
+    set_enable_gripper(true);
+  }
+
   // Add a set parameters callback.
   // Initialize a function pointer to the set_parameters_callback member with 
   // one argument placeholder (for the parameter vector).
